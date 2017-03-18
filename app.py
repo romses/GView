@@ -2,8 +2,10 @@ from logbook import Logbook
 
 
 lb = Logbook("test.gl")
-events = lb.get_all_events()
 
-for event in events:
-    print(event.data)
+for event in lb.events:
     print(event.metadata)
+    print(event.data)
+
+
+#lb.import_file("723H3126.FIT")

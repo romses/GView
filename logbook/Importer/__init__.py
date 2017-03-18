@@ -48,7 +48,7 @@ class Plugin:
         return self._type
     
     def __repr__(self):
-        return("Plugin "+self._actions+" "+self._type)
+        return(" "+self._actions+" "+self._type)
     
     def printme(self):
         print("Plugin ",self._actions,self._type,self._filename,self._event)

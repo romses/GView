@@ -27,8 +27,8 @@ class Swimming(IPlugin,Plugin):
             self.open_logbook(self._filename)
             self.get_data()
 
-
     def open_logbook(self,logbook):
+        self._filename = logbook
         self._alchemy_logbook = create_engine('sqlite:///'+logbook)   
         _metadata = MetaData(bind=self._alchemy_logbook)
         
@@ -46,9 +46,8 @@ class Swimming(IPlugin,Plugin):
                                 )
         self.swim_table.create(checkfirst=True)
 
-    @staticmethod
     def import_fit(self,fitfile=None):
-        
+        print("Swimming: Importing file",fitfile,"into ",self._filename)
         stmt = self.file_table.select(self.file_table.c.file_hash==fitfile.digest)
         row = stmt.execute().fetchone()
         
@@ -123,7 +122,9 @@ class Swimming(IPlugin,Plugin):
         
         speed_data.data.append(0)
         speed_data.labels.append(0)
-        
+
+        row = None
+               
         for row in self._alchemy_logbook.execute(s):
             if row.total_strokes and row.distance and row.total_calories and row.total_elapsed_time:
                 rows = rows + 1
@@ -139,29 +140,35 @@ class Swimming(IPlugin,Plugin):
                 total_calories = total_calories + row.total_calories
                 event_duration = event_duration + row.total_elapsed_time
             
-        lap_distance = row.distance / rows
-        total_length = row.distance
-        total_time = row.start_time
-        
-        self._data = [strokes_data,calories_data,speed_data]
-        
-        time_per_hundred = (100/lap_distance)*(event_duration/lap_distance)
-
-        self._formdata = []
-
-        self._formdata.append(TimeSeriesMetaData("Lap length",lap_distance,"m"))
-        self._formdata.append(TimeSeriesMetaData("Total Length",total_length,"m"))
-        self._formdata.append(TimeSeriesMetaData("Time per 100m",time_per_hundred,"s"))
-        self._formdata.append(TimeSeriesMetaData("average speed",(total_length/event_duration),"m/s"))
-        self._formdata.append(TimeSeriesMetaData("Total time",total_time,"s"))
-        self._formdata.append(TimeSeriesMetaData("Total calories",total_calories,"kcal"))
-        self._formdata.append(TimeSeriesMetaData("Event duration",event_duration,"s"))
-
+        if row:
+            lap_distance = row.distance / rows
+            total_length = row.distance
+            total_time = row.start_time
+            
+            self._data = [strokes_data,calories_data,speed_data]
+            
+            time_per_hundred = (100/lap_distance)*(event_duration/lap_distance)
     
+            self._formdata = []
+    
+            self._formdata.append(TimeSeriesMetaData("Lap length",lap_distance,"m"))
+            self._formdata.append(TimeSeriesMetaData("Total Length",total_length,"m"))
+            self._formdata.append(TimeSeriesMetaData("Time per 100m",time_per_hundred,"s"))
+            self._formdata.append(TimeSeriesMetaData("average speed",(total_length/event_duration),"m/s"))
+            self._formdata.append(TimeSeriesMetaData("Total time",total_time,"s"))
+            self._formdata.append(TimeSeriesMetaData("Total calories",total_calories,"kcal"))
+            self._formdata.append(TimeSeriesMetaData("Event duration",event_duration,"s"))
+
     @property
     def ui(self):
-        return self.get_ui()
-    
+        layout = QFormLayout()
+        sex = QHBoxLayout()
+        sex.addWidget(QRadioButton("Male"))
+        sex.addWidget(QRadioButton("Female"))
+        layout.addRow(QLabel("Sex"),sex)
+        layout.addRow("Date of Birth",QLineEdit())
+        return layout
+
     @property
     def metadata(self):
         return self._metadata
@@ -170,19 +177,5 @@ class Swimming(IPlugin,Plugin):
     def data(self):
         return self._data
     
-    def get_ui(self):
-        layout = QFormLayout()
-        sex = QHBoxLayout()
-        sex.addWidget(QRadioButton("Male"))
-        sex.addWidget(QRadioButton("Female"))
-        layout.addRow(QLabel("Sex"),sex)
-        layout.addRow("Date of Birth",QLineEdit())
-        return layout
-    
-    def connect(self,log_name=None,event=None):
-        return Swimming(log_name=log_name,metadata=event)
-    
-    def printme(self):
-        print("Plugin ",self._type)
-        print(" Filename: ",self._filename)
-        print(" Event:",self._metadata)
+    def connect(self,event=None):
+        return Swimming(log_name=self._filename,metadata=event)

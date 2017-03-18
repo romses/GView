@@ -54,11 +54,28 @@ class Logbook(object):
         load plugins and register them
         '''
         for p in manager.getAllPlugins():
-            print("loading plugin ",p.plugin_object)
+            self.logging.info("loading plugin ",p.plugin_object)
             self._plugins[p.plugin_object.type]=p.plugin_object
+            self._plugins[p.plugin_object.type].open_logbook(filename)
 
+        self.logging.info("%s plugins loaded"%len(manager.getAllPlugins()))
+        
+        stmt = self._file_table.select().order_by(desc(self._file_table.c.creation_date))
+        rows = stmt.execute()
+        
+        self.event_table = []
+        
+        '''
+        create row objects.
+        each event is connected to an object
+        '''
+        for row in rows:
+            if row.event_type in self._plugins:
+                o = self._plugins[row.event_type].connect(event=row)
+            else:
+                o = self._plugins['default'].connect(event=row)
             
-        print("%s plugins loaded"%len(manager.getAllPlugins()))
+            self.event_table.append(o)
 
         
     def close_logbook(self):
@@ -123,21 +140,8 @@ class Logbook(object):
             print(e)
             return False 
                     
-    def get_all_events(self):
-        
-        stmt = self._file_table.select().order_by(desc(self._file_table.c.creation_date))
-        rows = stmt.execute()
-        
-        event_table = []
-        
-        for row in rows:
-            if row.event_type in self._plugins:
-                o = self._plugins[row.event_type].connect(log_name=self.name,event=row)
-            else:
-                o = self._plugins['default'].connect(log_name=self.name,event=row)
-            
-            event_table.append(o)
-            
-        return event_table
+    @property
+    def events(self):
+        return self.event_table
 
         
