@@ -1,9 +1,9 @@
 [Core]
 Name=Generic importer
-Module=generic
+Module=default
 
 [Documentation]
 Author=Christopher Kreitz
 Version=0.1
-Description=Generic activity importer
+Description=Default activity importer
 Website=https://www.example.com

@@ -1,14 +1,15 @@
 from yapsy.IPlugin import IPlugin
-from messages import TimeSeries,TimeSeriesData
+from logbook.Importer import Plugin
+import logging
 from PyQt5.QtWidgets import QHBoxLayout, QLabel, QCheckBox
 
-class Generic(IPlugin):
-    
+class Default(IPlugin,Plugin):
     def __init__(self,log_name=None,event=None):
-        self._actions='generic'
-        self._type='generic'
+        self._actions='import'
+        self._type='default'
+        self.logging = logging.getLogger(__name__)
         self._filename = log_name                       # like test.gl
-        self._event = event                             # like xyz.fit in fatabase
+        self._event = event                             # like xyz.fit in database
 
     def open_logbook(self,logbook):
         pass
@@ -18,14 +19,6 @@ class Generic(IPlugin):
     
     def import_fit(self,fitfile=None):
         pass
-            
-    @property
-    def actions(self):
-        return self._actions
-    
-    @property
-    def type(self):
-        return self._type
         
     @property
     def ui(self):
@@ -35,10 +28,5 @@ class Generic(IPlugin):
         layout.addWidget(QCheckBox("Maths"))
         return layout
     
-    @property
-    def metadata(self):
-        pass
-    
-    def get_event(self,log_name=None,event=None):
-        print(log_name)
-        return Generic(log_name,event)
+    def connect(self,log_name=None,event=None):
+        return Default(log_name,event)

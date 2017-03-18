@@ -2,4 +2,8 @@ from logbook import Logbook
 
 
 lb = Logbook("test.gl")
-lb.get_all_events()
+events = lb.get_all_events()
+
+for event in events:
+    print(event.data)
+    print(event.metadata)

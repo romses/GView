@@ -1,25 +1,39 @@
 from yapsy.IPlugin import IPlugin
-from messages import TimeSeries, TimeSeriesData,TimeSeriesMetaData
+from logbook.Importer import Plugin
+from messages import TimeSeriesData,TimeSeriesMetaData,LogMetaData
 from sqlalchemy import *
 import logging
 from PyQt5.QtWidgets import QHBoxLayout, QLabel, QFormLayout, QLineEdit, QRadioButton
 
 
-class Swimming(IPlugin):
+class Swimming(IPlugin,Plugin):
     
-    def __init__(self,log_name=None,event=None):
+    def __init__(self,log_name=None,metadata=None):
         self._actions='import'
         self._type='swimming'
         self.logging = logging.getLogger(__name__)
-        self._filename = log_name                       # like test.gl
-        self._event = event                             # like xyz.fit in fatabase
+        self._filename = log_name
+        self._formdata = None
+        self._data = None
+        self._metadata = None
+        
+        if metadata:
+            self._metadata = LogMetaData(file_hash=metadata.file_hash,
+                                 date=metadata.creation_date,
+                                 name=metadata.event_name,
+                                 maintype=metadata.event_type,
+                                 subtype=metadata.event_subtype
+                                 )
+            self.open_logbook(self._filename)
+            self.get_data()
+
 
     def open_logbook(self,logbook):
         self._alchemy_logbook = create_engine('sqlite:///'+logbook)   
-        self._metadata = MetaData(bind=self._alchemy_logbook)
+        _metadata = MetaData(bind=self._alchemy_logbook)
         
-        self.file_table = Table('file', self._metadata, autoload=True)
-        self.swim_table = Table("event_swimming",self._metadata,
+        self.file_table = Table('file', _metadata, autoload=True)
+        self.swim_table = Table("event_swimming",_metadata,
                                 Column('event_swimming_id',Integer,primary_key=True),
                                 Column('f_id',Integer,ForeignKey("file.file_id"), nullable=False),
                                 Column('event_timestamp',DateTime),
@@ -88,67 +102,73 @@ class Swimming(IPlugin):
             values(distance=bindparam('distance'))
             self._alchemy_logbook.execute(stmt,data)
 
-    def get_data(self,event):
+    def get_data(self):
+        
         s = self.swim_table.join(self.file_table).\
-        select().where(self.file_table.c.file_hash==event.filehash)
+        select().where(self.file_table.c.file_hash==self._metadata.file_hash)
 
-        strokes_data  = TimeSeriesData(name="strokes" ,timestamp=[],data=[],unit=None)
-        calories_data = TimeSeriesData(name="calories",timestamp=[],data=[],unit=None)
-        speed_data    = TimeSeriesData(name="speed"   ,timestamp=[],data=[],unit="min/100m")
-        metadata = []
+        strokes_data  = TimeSeriesData(name="strokes" ,labels=[],data=[],unit=None)
+        calories_data = TimeSeriesData(name="calories",labels=[],data=[],unit=None)
+        speed_data    = TimeSeriesData(name="speed"   ,labels=[],data=[],unit="min/100m")
         
         rows = 0
         total_calories = 0
         event_duration = 0
+
+        strokes_data.data.append(0)
+        strokes_data.labels.append(0)
+        
+        calories_data.data.append(0)
+        calories_data.labels.append(0)
+        
+        speed_data.data.append(0)
+        speed_data.labels.append(0)
         
         for row in self._alchemy_logbook.execute(s):
             if row.total_strokes and row.distance and row.total_calories and row.total_elapsed_time:
                 rows = rows + 1
                 strokes_data.data.append(row.total_strokes)
-                strokes_data.timestamp.append(row.distance)
+                strokes_data.labels.append(row.distance)
                 
                 calories_data.data.append(row.total_calories)
-                calories_data.timestamp.append(row.distance)
+                calories_data.labels.append(row.distance)
                 
                 speed_data.data.append(((row.total_elapsed_time/50)*100)/60) #FIXME
-                speed_data.timestamp.append(row.distance)
+                speed_data.labels.append(row.distance)
                 
                 total_calories = total_calories + row.total_calories
                 event_duration = event_duration + row.total_elapsed_time
             
-        lap_distance = row.distance / (rows)
+        lap_distance = row.distance / rows
         total_length = row.distance
         total_time = row.start_time
-        average_speed = row.distance / event_duration
+        
+        self._data = [strokes_data,calories_data,speed_data]
         
         time_per_hundred = (100/lap_distance)*(event_duration/lap_distance)
-        
-        print("Distance",lap_distance)
-        metadata.append(TimeSeriesMetaData("Lap length",lap_distance,"m"))
-        metadata.append(TimeSeriesMetaData("Total Length",total_length,"m"))
-        metadata.append(TimeSeriesMetaData("Time per 100m",time_per_hundred,"s"))
-        metadata.append(TimeSeriesMetaData("average speed",(total_length/event_duration),"m/s"))
-        metadata.append(TimeSeriesMetaData("Total time",total_time,"s"))
-        metadata.append(TimeSeriesMetaData("Total calories",total_calories,"kcal"))
-        metadata.append(TimeSeriesMetaData("Event duration",event_duration,"s"))
-            
-        return TimeSeries(metadata=metadata,data=[strokes_data,calories_data,speed_data])
-    
-    @property
-    def actions(self):
-        return self._actions
-    
-    @property
-    def type(self):
-        return self._type
 
+        self._formdata = []
+
+        self._formdata.append(TimeSeriesMetaData("Lap length",lap_distance,"m"))
+        self._formdata.append(TimeSeriesMetaData("Total Length",total_length,"m"))
+        self._formdata.append(TimeSeriesMetaData("Time per 100m",time_per_hundred,"s"))
+        self._formdata.append(TimeSeriesMetaData("average speed",(total_length/event_duration),"m/s"))
+        self._formdata.append(TimeSeriesMetaData("Total time",total_time,"s"))
+        self._formdata.append(TimeSeriesMetaData("Total calories",total_calories,"kcal"))
+        self._formdata.append(TimeSeriesMetaData("Event duration",event_duration,"s"))
+
+    
     @property
     def ui(self):
         return self.get_ui()
     
     @property
     def metadata(self):
-        pass
+        return self._metadata
+    
+    @property
+    def data(self):
+        return self._data
     
     def get_ui(self):
         layout = QFormLayout()
@@ -159,6 +179,10 @@ class Swimming(IPlugin):
         layout.addRow("Date of Birth",QLineEdit())
         return layout
     
-    def get_event(self,log_name=None,event=None):
-        print(log_name)
-        return Swimming(log_name,event)
+    def connect(self,log_name=None,event=None):
+        return Swimming(log_name=log_name,metadata=event)
+    
+    def printme(self):
+        print("Plugin ",self._type)
+        print(" Filename: ",self._filename)
+        print(" Event:",self._metadata)

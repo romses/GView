@@ -1,11 +1,15 @@
 from yapsy.IPlugin import IPlugin
-from messages import EventTableEntry,TimeSeries
+from messages import EventTableEntry
+from messages import LogMetaData
 
-class Plugin(IPlugin):
+class Plugin:
     
     def __init__(self):
         self._actions=None
-        self._event=None
+        self._type=None
+        self._filename = None
+        self._formdata = None
+        self._data = None
 
     def open_logbook(self,logbook=None):
         pass
@@ -19,8 +23,17 @@ class Plugin(IPlugin):
     def get_data(self,event):
         return (None)
 
-    def get_metadata(self):
-        pass
+    @property
+    def metadata(self):
+        return []
+    
+    @property
+    def data(self):
+        return []
+
+    @property
+    def formdata(self):
+        return []
             
     @property
     def actions(self):
@@ -30,3 +43,12 @@ class Plugin(IPlugin):
     def event(self):
         return self._event
 
+    @property
+    def type(self):
+        return self._type
+    
+    def __repr__(self):
+        return("Plugin "+self._actions+" "+self._type)
+    
+    def printme(self):
+        print("Plugin ",self._actions,self._type,self._filename,self._event)

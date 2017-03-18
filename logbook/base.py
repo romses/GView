@@ -54,8 +54,9 @@ class Logbook(object):
         load plugins and register them
         '''
         for p in manager.getAllPlugins():
+            print("loading plugin ",p.plugin_object)
             self._plugins[p.plugin_object.type]=p.plugin_object
-            print("loading plugin ",p.plugin_object.type)
+
             
         print("%s plugins loaded"%len(manager.getAllPlugins()))
 
@@ -107,7 +108,7 @@ class Logbook(object):
                 conn = self._alchemy_logbook.connect()
                 conn.execute(f_id)
                 if event_sport not in self._plugins:
-                    self._plugins["generic"].import_fit(fitfile)
+                    self._plugins["default"].import_fit(fitfile)
                 else:
                     self._plugins[event_sport].import_fit(fitfile)
                     
@@ -130,15 +131,13 @@ class Logbook(object):
         event_table = []
         
         for row in rows:
-            meta_data = EventTableEntry(filehash=row.file_hash,date=str(row.creation_date),
-                                               name=row.event_name,maintype=row.event_type,
-                                               subtype=row.event_subtype)
             if row.event_type in self._plugins:
-                o = self._plugins[row.event_type].get_event(log_name=self.name,event=row.file_hash)
+                o = self._plugins[row.event_type].connect(log_name=self.name,event=row)
             else:
-                o = self._plugins['generic'].get_event(log_name=self.name,event=row.file_hash)
-
-            event_table.append(LogRow(meta_data=meta_data,form_data=None, time_series=None, ui=None))
+                o = self._plugins['default'].connect(log_name=self.name,event=row)
+            
+            event_table.append(o)
+            
         return event_table
 
         
