@@ -69,7 +69,7 @@ class Application(QMainWindow, Ui_FitView):
             row = int(self.all_events_table.item(item.row(),4).text())
             indexes.append(row)
   
-        self.graphwidget.update_figure(data=self._event_table[indexes[0]].data)
+        self.graphwidget.update_figure(data=self._event_table[indexes[0]].data,title="Bar")
 
     def import_files(self):
         options = QFileDialog.Options()

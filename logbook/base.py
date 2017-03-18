@@ -54,7 +54,7 @@ class Logbook(object):
         load plugins and register them
         '''
         for p in manager.getAllPlugins():
-            self.logging.info("loading plugin ",p.plugin_object)
+            self.logging.info("loading plugin "+p.plugin_object.id)
             self._plugins[p.plugin_object.type]=p.plugin_object
             self._plugins[p.plugin_object.type].open_logbook(filename)
 

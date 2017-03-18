@@ -25,6 +25,7 @@ class MatPlotLibCanvas(FigureCanvas):
         self.axes.grid(b=True, which='minor', color='0.85',linestyle=':')
         self.axes.grid(b=True, which='major', color='0.55',linestyle=':')
         #self.axes.grid(b=True, which='both', color='0.75',linestyle=':')
+        self.axes.set_title(title,fontsize=30)
         self.axes.minorticks_on()
         
         if data:
@@ -33,9 +34,9 @@ class MatPlotLibCanvas(FigureCanvas):
                 g, = self.axes.plot( event.labels,event.data,label=event.name+unit)
                 g.set_drawstyle('steps-mid')
                 
-        self.axes.set_title(title,fontsize=30)
-        self.axes.set_xlabel("XLabel")
-        self.axes.set_ylabel("YLabel")
-        self.axes.legend()
-        self.draw()
+
+            self.axes.set_xlabel("XLabel")
+            self.axes.set_ylabel("YLabel")
+            self.axes.legend()
+            self.draw()
         self.fig.tight_layout()

@@ -47,6 +47,10 @@ class Plugin:
     def type(self):
         return self._type
     
+    @property
+    def id(self):
+        return (self._actions+" "+self._type)
+    
     def __repr__(self):
         return(" "+self._actions+" "+self._type)
     

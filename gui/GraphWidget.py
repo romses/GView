@@ -7,8 +7,6 @@ class GraphWidget(Ui_GraphLayout):
     
     def __init__(self,parent=None):
         
-        print(type(self))
-        
         Ui_GraphLayout.__init__(parent)
         self.setupUi(parent)
         
@@ -20,5 +18,5 @@ class GraphWidget(Ui_GraphLayout):
         self.canvas_vertical_layout.addWidget(self.canvas)
         
         
-    def update_figure(self, data = None):
-        self.canvas.update_figure(data)
+    def update_figure(self, data = None,title="Dummy"):
+        self.canvas.update_figure(data,title)
