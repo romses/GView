@@ -77,9 +77,10 @@ class Logbook(object):
             
             self.event_table.append(o)
 
-        
     def close_logbook(self):
-        self._alchemy_logbook.close()
+        self.event_table = []
+#        self._file_table.close()
+#        self._alchemy_logbook.close()
 
     def _check_database_integrity(self):
         '''
@@ -144,4 +145,5 @@ class Logbook(object):
     def events(self):
         return self.event_table
 
-        
+    def __getitem__(self,key):
+        return self.event_table[key]

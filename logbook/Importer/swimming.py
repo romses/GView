@@ -47,7 +47,6 @@ class Swimming(IPlugin,Plugin):
         self.swim_table.create(checkfirst=True)
 
     def import_fit(self,fitfile=None):
-        print("Swimming: Importing file",fitfile,"into ",self._filename)
         stmt = self.file_table.select(self.file_table.c.file_hash==fitfile.digest)
         row = stmt.execute().fetchone()
         
