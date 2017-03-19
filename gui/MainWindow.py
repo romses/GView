@@ -6,7 +6,7 @@ Created on 9 Mar 2017
 
 
 from PyQt5.QtWidgets import QApplication, QMainWindow 
-from PyQt5.QtWidgets import qApp, QFileDialog
+from PyQt5.QtWidgets import qApp, QFileDialog,QWidget
 from PyQt5.QtWidgets import QAbstractItemView, QTableWidgetItem
 from PyQt5.QtWidgets import QSizePolicy,QPushButton
 from PyQt5 import QtWidgets
@@ -68,6 +68,8 @@ class Application(QMainWindow, Ui_FitView):
         for selectionRange in self.all_events_table.selectedRanges():
             row = int(self.all_events_table.item(item.row(),4).text())
             indexes.append(row)
+        
+        self.metadataStackedWidget.setCurrentIndex(indexes[0])
   
         self.graphwidget.update_figure(data=self._event_table[indexes[0]].data,title="Bar")
 
@@ -122,6 +124,10 @@ class Application(QMainWindow, Ui_FitView):
                 self.all_events_table.setItem(i,2, QTableWidgetItem(ev.metadata.maintype))
                 self.all_events_table.setItem(i,3, QTableWidgetItem(ev.metadata.subtype))
                 self.all_events_table.setItem(i,4, QTableWidgetItem(str(i)))
+                tmp = QWidget()
+                tmp.setLayout(ev.ui)
+                self.metadataStackedWidget.insertWidget(i,tmp)
+#                self.metadataStackedWidget.addWidget(tmp)
                 i+=1
         
         self.graphwidget.update_figure()

@@ -2,14 +2,15 @@ from yapsy.IPlugin import IPlugin
 from logbook.Importer import Plugin
 from messages import TimeSeriesData,TimeSeriesMetaData,LogMetaData
 import logging
-from PyQt5.QtWidgets import QHBoxLayout, QLabel, QCheckBox
+from PyQt5.QtWidgets import QHBoxLayout, QLabel, QFormLayout, QLineEdit
 
 class Default(IPlugin,Plugin):
     def __init__(self,log_name=None,metadata=None):
         self._actions='import'
         self._type='default'
         self.logging = logging.getLogger(__name__)
-        self._filename = log_name                       # like test.gl
+        self._filename = log_name 
+        self._formdata = None
         self._metadata = None
         self._data = None
         
@@ -32,10 +33,12 @@ class Default(IPlugin,Plugin):
         
     @property
     def ui(self):
-        layout = QHBoxLayout()
-        layout.addWidget(QLabel("subjects"))
-        layout.addWidget(QCheckBox("Physics"))
-        layout.addWidget(QCheckBox("Maths"))
+        layout = QFormLayout()
+        self.labels=[]
+        self.lineedits=[]
+        if self._formdata:
+            for i in range(len(self._formdata)):
+                layout.addRow(QLabel(self._formdata[i].name+" ("+self._formdata[i].unit+")"), QLineEdit(str(self._formdata[i].value)))
         return layout
     
     @property

@@ -3,7 +3,8 @@ from logbook.Importer import Plugin
 from messages import TimeSeriesData,TimeSeriesMetaData,LogMetaData
 from sqlalchemy import *
 import logging
-from PyQt5.QtWidgets import QHBoxLayout, QLabel, QFormLayout, QLineEdit, QRadioButton
+from PyQt5.QtWidgets import QLabel, QFormLayout, QLineEdit
+#from PyQt5 import QtCore, QtGui, QtWidgets
 
 
 class Swimming(IPlugin,Plugin):
@@ -16,6 +17,8 @@ class Swimming(IPlugin,Plugin):
         self._formdata = None
         self._data = None
         self._metadata = None
+        self.labels=[]
+        self.lineedits = []
         
         if metadata:
             self._metadata = LogMetaData(file_hash=metadata.file_hash,
@@ -106,6 +109,7 @@ class Swimming(IPlugin,Plugin):
         select().where(self.file_table.c.file_hash==self._metadata.file_hash)
 
         strokes_data  = TimeSeriesData(name="strokes" ,labels=[],data=[],unit=None)
+        avg_strokes   = TimeSeriesData(name="avg strokes",labels=[],data=[],unit="Strokes/lap")
         calories_data = TimeSeriesData(name="calories",labels=[],data=[],unit=None)
         speed_data    = TimeSeriesData(name="speed"   ,labels=[],data=[],unit="min/100m")
         
@@ -115,12 +119,17 @@ class Swimming(IPlugin,Plugin):
 
         strokes_data.data.append(0)
         strokes_data.labels.append(0)
+
+        avg_strokes.data.append(0)
+        avg_strokes.labels.append(0)
         
         calories_data.data.append(0)
         calories_data.labels.append(0)
         
         speed_data.data.append(0)
         speed_data.labels.append(0)
+
+        stro = 0
 
         row = None
                
@@ -129,6 +138,11 @@ class Swimming(IPlugin,Plugin):
                 rows = rows + 1
                 strokes_data.data.append(row.total_strokes)
                 strokes_data.labels.append(row.distance)
+                
+                stro = stro + row.total_strokes
+                
+                avg_strokes.data.append((stro/row.distance)*50)
+                avg_strokes.labels.append(row.distance)
                 
                 calories_data.data.append(row.total_calories)
                 calories_data.labels.append(row.distance)
@@ -140,11 +154,11 @@ class Swimming(IPlugin,Plugin):
                 event_duration = event_duration + row.total_elapsed_time
             
         if row:
-            lap_distance = row.distance / rows
+            lap_distance = int(row.distance / rows)
             total_length = row.distance
             total_time = row.start_time
             
-            self._data = [strokes_data,calories_data,speed_data]
+            self._data = [strokes_data,calories_data,speed_data,avg_strokes]
             
             time_per_hundred = (100/lap_distance)*(event_duration/lap_distance)
     
@@ -152,20 +166,20 @@ class Swimming(IPlugin,Plugin):
     
             self._formdata.append(TimeSeriesMetaData("Lap length",lap_distance,"m"))
             self._formdata.append(TimeSeriesMetaData("Total Length",total_length,"m"))
-            self._formdata.append(TimeSeriesMetaData("Time per 100m",time_per_hundred,"s"))
-            self._formdata.append(TimeSeriesMetaData("average speed",(total_length/event_duration),"m/s"))
-            self._formdata.append(TimeSeriesMetaData("Total time",total_time,"s"))
+            self._formdata.append(TimeSeriesMetaData("Time per 100m","%.1f" %time_per_hundred,"s"))
+            self._formdata.append(TimeSeriesMetaData("average speed","%.1f" %(total_length/event_duration),"m/s"))
+#            self._formdata.append(TimeSeriesMetaData("Total time",total_time,"s"))
             self._formdata.append(TimeSeriesMetaData("Total calories",total_calories,"kcal"))
-            self._formdata.append(TimeSeriesMetaData("Event duration",event_duration,"s"))
+            self._formdata.append(TimeSeriesMetaData("Event duration","%.1f" %(event_duration/60),"min"))
 
     @property
     def ui(self):
         layout = QFormLayout()
-        sex = QHBoxLayout()
-        sex.addWidget(QRadioButton("Male"))
-        sex.addWidget(QRadioButton("Female"))
-        layout.addRow(QLabel("Sex"),sex)
-        layout.addRow("Date of Birth",QLineEdit())
+        self.labels=[]
+        self.lineedits=[]
+        if self._formdata:
+            for i in range(len(self._formdata)):
+                layout.addRow(QLabel(self._formdata[i].name+" ("+self._formdata[i].unit+")"), QLineEdit(str(self._formdata[i].value)))
         return layout
 
     @property
