@@ -6,8 +6,8 @@ from PyQt5.QtWidgets import QHBoxLayout, QLabel, QFormLayout, QLineEdit
 
 class Default(IPlugin,Plugin):
     def __init__(self,log_name=None,metadata=None):
-        self._actions='import'
-        self._type='default'
+        self._actions=['import']
+        self._type=['default']
         self.logging = logging.getLogger(__name__)
         self._filename = log_name 
         self._formdata = None

@@ -10,8 +10,8 @@ from PyQt5.QtWidgets import QLabel, QFormLayout, QLineEdit
 class Swimming(IPlugin,Plugin):
     
     def __init__(self,log_name=None,metadata=None):
-        self._actions='import'
-        self._type='swimming'
+        self._actions=['import']
+        self._type=['swimming']
         self.logging = logging.getLogger(__name__)
         self._filename = log_name
         self._formdata = None

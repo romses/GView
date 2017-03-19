@@ -49,7 +49,12 @@ class Plugin:
     
     @property
     def id(self):
-        return (self._actions+" "+self._type)
+        ret = ""
+        for a in self._actions:
+            ret = ret + " " +a
+        for t in self._type:
+            ret = ret+" "+t
+        return ret
     
     def __repr__(self):
         return(" "+self._actions+" "+self._type)

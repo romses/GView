@@ -20,8 +20,7 @@ class MatPlotLibCanvas(FigureCanvas):
         FigureCanvas.updateGeometry(self)     
 
     def update_figure(self, data = None,title="Dummy"):
-        self.axes.clear()  
-
+        self.axes.clear()
         self.axes.grid(b=True, which='minor', color='0.85',linestyle=':')
         self.axes.grid(b=True, which='major', color='0.55',linestyle=':')
         #self.axes.grid(b=True, which='both', color='0.75',linestyle=':')
@@ -38,5 +37,5 @@ class MatPlotLibCanvas(FigureCanvas):
             self.axes.set_xlabel("XLabel")
             self.axes.set_ylabel("YLabel")
             self.axes.legend()
-            self.draw()
+        self.draw()
         self.fig.tight_layout()

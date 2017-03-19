@@ -55,11 +55,14 @@ class Logbook(object):
         '''
         for p in manager.getAllPlugins():
             self.logging.info("loading plugin "+p.plugin_object.id)
-            self._plugins[p.plugin_object.type]=p.plugin_object
-            self._plugins[p.plugin_object.type].open_logbook(filename)
+            for t in p.plugin_object.type:
+                self._plugins[t]=p.plugin_object
+                self._plugins[t].open_logbook(filename)
 
         self.logging.info("%s plugins loaded"%len(manager.getAllPlugins()))
+        self.read_events()
         
+    def read_events(self):
         stmt = self._file_table.select().order_by(desc(self._file_table.c.creation_date))
         rows = stmt.execute()
         
@@ -91,55 +94,55 @@ class Logbook(object):
         
         self._metadata.create_all(checkfirst=True)
  
-    def import_file(self,file):
-                
+    def import_file(self,files):
         try:
-            fitfile = FitFile(file)
-            filename = os.path.basename(file)
-            filehash = fitfile.digest
-            
-            creation_date = ""
-            event_name = ""
-            event_sport = ""
-            event_subsport = ""
-
-#            if not result:
-            self.logging.info("Importing file %s",filename)
+            for file in files:
+                fitfile = FitFile(file)
+                filename = os.path.basename(file)
+                filehash = fitfile.digest
                 
-            for record in fitfile.get_messages():
-                for record_data in record:
-                    if record.name == "file_id" and record_data.name == "time_created":
-                        creation_date = record_data.value
-                    if record.name == "sport":
-                        if record_data.name == "sport":
-                            event_sport = str(record_data.value)
-                        if record_data.name == "sub_sport":
-                            event_subsport = str(record_data.value)
-                        if record_data.name == "name":
-                            event_name = record_data.value.decode('utf-8')
-                            
-            try:
-                file_insert = self._file_table.insert()
-                f_id = file_insert.values(file_name=filename,file_hash=filehash,
-                                          creation_date=creation_date,event_name=event_name,
-                                          event_type=event_sport, event_subtype=event_subsport)
-                conn = self._alchemy_logbook.connect()
-                conn.execute(f_id)
-                if event_sport not in self._plugins:
-                    self._plugins["default"].import_fit(fitfile)
-                else:
-                    self._plugins[event_sport].import_fit(fitfile)
+                creation_date = ""
+                event_name = ""
+                event_sport = ""
+                event_subsport = ""
+    
+    #            if not result:
+                self.logging.info("Importing file %s",filename)
                     
-            except Exception as e:
-                self.logging.info(e)
-                
-            self.logging.info("Import finished")
-                
-            return True
+                for record in fitfile.get_messages():
+                    for record_data in record:
+                        if record.name == "file_id" and record_data.name == "time_created":
+                            creation_date = record_data.value
+                        if record.name == "sport":
+                            if record_data.name == "sport":
+                                event_sport = str(record_data.value)
+                            if record_data.name == "sub_sport":
+                                event_subsport = str(record_data.value)
+                            if record_data.name == "name":
+                                event_name = record_data.value.decode('utf-8')
+                                
+                try:
+                    file_insert = self._file_table.insert()
+                    f_id = file_insert.values(file_name=filename,file_hash=filehash,
+                                              creation_date=creation_date,event_name=event_name,
+                                              event_type=event_sport, event_subtype=event_subsport)
+                    conn = self._alchemy_logbook.connect()
+                    conn.execute(f_id)
+                    if event_sport not in self._plugins:
+                        self._plugins["default"].import_fit(fitfile)
+                    else:
+                        self._plugins[event_sport].import_fit(fitfile)
+                        
+                except Exception as e:
+                    self.logging.info(e)
+                    
+                self.logging.info("Import finished")
+
         except Exception as e:
 #            self.logging.error("Error importing file")
             print(e)
-            return False 
+
+        self.read_events()
                     
     @property
     def events(self):

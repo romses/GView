@@ -8,22 +8,16 @@ Created on 9 Mar 2017
 from PyQt5.QtWidgets import QApplication, QMainWindow 
 from PyQt5.QtWidgets import qApp, QFileDialog,QWidget
 from PyQt5.QtWidgets import QAbstractItemView, QTableWidgetItem
-from PyQt5.QtWidgets import QSizePolicy,QPushButton
-from PyQt5 import QtWidgets
-
-
-
-from PyQt5.QtCore import QObject
+#from PyQt5.QtWidgets import QSizePolicy,QPushButton
+#from PyQt5 import QtWidgets
+#from PyQt5.QtCore import QObject
 from PyQt5.QtCore import QSettings
-
-
 from gui.GraphWidget import GraphWidget
-
-import random
+#import random
 #import seaborn as sns
 import logging
-from logbook import Logbook
 
+from logbook import Logbook
 from gui.mainwindow_ui import Ui_FitView
             
 class Application(QMainWindow, Ui_FitView):
@@ -70,7 +64,6 @@ class Application(QMainWindow, Ui_FitView):
             indexes.append(row)
         
         self.metadataStackedWidget.setCurrentIndex(indexes[0])
-  
         self.graphwidget.update_figure(data=self._event_table[indexes[0]].data,title="Bar")
 
     def import_files(self):
@@ -78,11 +71,10 @@ class Application(QMainWindow, Ui_FitView):
         file_names, _ = QFileDialog.getOpenFileNames(self,"Open File", "","FIT file (*.FIT)", options=options)
         
         if file_names:
-            for file in file_names:
-                if self._logbook.import_file(file):
-                    pass
-                else:
-                    self.logging.info("Invalid File")
+            if self._logbook.import_file(file_names):
+                pass
+            else:
+                self.logging.info("Invalid File")
         self.load_tablewidget_data()
                       
     def open_logbook(self):
@@ -91,7 +83,7 @@ class Application(QMainWindow, Ui_FitView):
         if fileName:
             self._logbook = Logbook(fileName)
             self.setWindowTitle("GView - " + fileName)
-            self.load_tablewidget_data()
+        self.load_tablewidget_data()
 
     def new_logbook(self):
         options = QFileDialog.Options()
@@ -111,26 +103,30 @@ class Application(QMainWindow, Ui_FitView):
         if unload_data:
             self.action_Import_Files.setEnabled(False)
             self.all_events_table.setRowCount(0)
-            self._event_table = []
+            self._event_table = []            
         else:
-            self.action_Import_Files.setEnabled(True)
-            self._event_table = self._logbook.events
-            self.all_events_table.setRowCount(len(self._event_table))
-    
-            i=0
-            for ev in self._event_table:
-                self.all_events_table.setItem(i,0, QTableWidgetItem(str(ev.metadata.date)))
-                self.all_events_table.setItem(i,1, QTableWidgetItem(ev.metadata.name))
-                self.all_events_table.setItem(i,2, QTableWidgetItem(ev.metadata.maintype))
-                self.all_events_table.setItem(i,3, QTableWidgetItem(ev.metadata.subtype))
-                self.all_events_table.setItem(i,4, QTableWidgetItem(str(i)))
-                tmp = QWidget()
-                tmp.setLayout(ev.ui)
-                self.metadataStackedWidget.insertWidget(i,tmp)
-#                self.metadataStackedWidget.addWidget(tmp)
-                i+=1
+            if self._logbook:
+                self.action_Import_Files.setEnabled(True)
+                self._event_table = self._logbook.events
+                self.all_events_table.setRowCount(len(self._event_table))
         
-        self.graphwidget.update_figure()
+                i=0
+                
+                print("EV Table len:",len(self._event_table))
+                
+                for ev in self._event_table:
+                    self.all_events_table.setItem(i,0, QTableWidgetItem(str(ev.metadata.date)))
+                    self.all_events_table.setItem(i,1, QTableWidgetItem(ev.metadata.name))
+                    self.all_events_table.setItem(i,2, QTableWidgetItem(ev.metadata.maintype))
+                    self.all_events_table.setItem(i,3, QTableWidgetItem(ev.metadata.subtype))
+                    self.all_events_table.setItem(i,4, QTableWidgetItem(str(i)))
+                    tmp = QWidget()
+                    tmp.setLayout(ev.ui)
+                    self.metadataStackedWidget.insertWidget(i,tmp)
+    #                self.metadataStackedWidget.addWidget(tmp)
+                    i+=1
+            
+            self.graphwidget.update_figure()
         
     def edit_event(self):
         pass
