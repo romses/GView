@@ -3,7 +3,9 @@ from logbook.Importer import Plugin
 from messages import TimeSeriesData,TimeSeriesMetaData,LogMetaData
 from sqlalchemy import *
 import logging
+from misc.profiling import timing
 from PyQt5.QtWidgets import QLabel, QFormLayout, QLineEdit
+import misc.profiling
 #from PyQt5 import QtCore, QtGui, QtWidgets
 
 
@@ -49,6 +51,7 @@ class Swimming(IPlugin,Plugin):
                                 )
         self.swim_table.create(checkfirst=True)
 
+    @timing
     def import_fit(self,fitfile=None):
         stmt = self.file_table.select(self.file_table.c.file_hash==fitfile.digest)
         row = stmt.execute().fetchone()
@@ -65,31 +68,42 @@ class Swimming(IPlugin,Plugin):
             distance=None
             
             data = []
+            fields=0
             
             for record_data in record:
                 if record_data.name == "timestamp":
                     event_timestamp = record_data.value
+                    fields +=1
                 if record_data.name =="start_time":
                     start_time = record_data.value
+                    fields +=1
                 if record_data.name == "swim_stroke":
                     swim_stroke = record_data.value
+                    fields +=1
                 if record_data.name == "total_calories":
                     total_calories = record_data.value
+                    fields +=1
                 if record_data.name == "total_strokes":
                     total_strokes = record_data.value
+                    fields +=1
                 if record_data.name == "total_elapsed_time":
                     total_elapsed_time = record_data.value
-
-            data.append({'f_id':file_id,'event_timestamp':event_timestamp,
-                         'start_time':start_time,'swim_stroke':swim_stroke,
-                         'total_calories':total_calories,'total_elapsed_time':total_elapsed_time,
-                         'total_strokes':total_strokes})
-            
-
-            self._alchemy_logbook.execute(self.swim_table.insert(),data)
+                    fields +=1
+                    
+            if fields == 6:
+                data.append({'f_id':file_id,'event_timestamp':event_timestamp,
+                             'start_time':start_time,'swim_stroke':swim_stroke,
+                             'total_calories':total_calories,'total_elapsed_time':total_elapsed_time,
+                             'total_strokes':total_strokes})
+                
+    
+                self._alchemy_logbook.execute(self.swim_table.insert(),data)
 
         data=[]
         for record in fitfile.get_messages(["record"]):
+            event_timestamp = None
+            distance = None
+            
             for record_data in record:
                 if record_data.name == "timestamp":
                     event_timestamp = record_data.value
@@ -104,6 +118,7 @@ class Swimming(IPlugin,Plugin):
                 values(distance=bindparam('distance'))
                 self._alchemy_logbook.execute(stmt,data)
 
+    @timing
     def get_data(self):
         
         s = self.swim_table.join(self.file_table).\

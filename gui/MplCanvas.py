@@ -32,7 +32,7 @@ class MatPlotLibCanvas(FigureCanvas):
         if data:
             for event in data:
                 unit = "("+event.unit+")" if event.unit else ""
-                if isinstance(event.labels[-1], datetime.datetime):
+                if len(event.labels)>0 and isinstance(event.labels[-1], datetime.datetime):
                     dates = matplotlib.dates.date2num(event.labels)
                     g, = self.axes.plot_date(dates,event.data,label=event.name+unit)
                 else:

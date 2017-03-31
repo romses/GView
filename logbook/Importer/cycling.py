@@ -8,11 +8,11 @@ from PyQt5.QtWidgets import QLabel, QFormLayout, QLineEdit
 #from PyQt5 import QtCore, QtGui, QtWidgets
 
 
-class Running(IPlugin,Plugin):
+class Cycling(IPlugin,Plugin):
     
     def __init__(self,log_name=None,metadata=None):
         self._actions=['import']
-        self._type=['running']
+        self._type=['cycling']
         self.logging = logging.getLogger(__name__)
         self._filename = log_name
         self._formdata = None
@@ -37,16 +37,15 @@ class Running(IPlugin,Plugin):
         _metadata = MetaData(bind=self._alchemy_logbook)
         
         self.file_table = Table('file', _metadata, autoload=True)
-        self.running_table = Table("event_running",_metadata,
-                                Column('event_running_id',Integer,primary_key=True),
+        self.cycling_table = Table("event_cycling",_metadata,
+                                Column('event_cycling_id',Integer,primary_key=True),
                                 Column('f_id',Integer,ForeignKey("file.file_id"), nullable=False),
                                 Column('timestamp',DateTime),
-                                Column('cadence',Integer),
                                 Column('distance',Integer),
-                                Column('enhanced_speed',Float),
+                                Column('enhanced_altitude',Float),
                                 Column('heart_rate',Integer)
                                 )
-        self.running_table.create(checkfirst=True)
+        self.cycling_table.create(checkfirst=True)
 
     @timing
     def import_fit(self,fitfile=None):
@@ -59,7 +58,7 @@ class Running(IPlugin,Plugin):
             timestamp = None
             cadence = None
             distance = None
-            enhanced_speed = None
+            enhanced_altitude = None
             heart_rate = None
             
             data = []
@@ -67,32 +66,30 @@ class Running(IPlugin,Plugin):
             for record_data in record:
                 if record_data.name == "timestamp":
                     timestamp = record_data.value
-                if record_data.name =="cadence":
-                    cadence = record_data.value
                 if record_data.name == "distance":
                     distance = record_data.value
-                if record_data.name == "enhanced_speed":
-                    enhanced_speed = record_data.value
+                if record_data.name == "enhanced_altitude":
+                    enhanced_altitude = record_data.value
                 if record_data.name == "heart_rate":
                     heart_rate = record_data.value
                     
             data.append({'f_id':file_id,'timestamp':timestamp,
-                         'cadence':cadence,'distance':distance,
-                         'enhanced_speed':enhanced_speed,'heart_rate':heart_rate})
+                         'distance':distance, 'enhanced_altitude':enhanced_altitude,
+                         'heart_rate':heart_rate})
             
 
-            self._alchemy_logbook.execute(self.running_table.insert(),data)
+            self._alchemy_logbook.execute(self.cycling_table.insert(),data)
 
     @timing
     def get_data(self):
         
-        s = self.running_table.join(self.file_table).\
+        s = self.cycling_table.join(self.file_table).\
         select().where(self.file_table.c.file_hash==self._metadata.file_hash)
 
-        cadence    = TimeSeriesData(name="cadence"   ,labels=[],data=[],unit='rpm')
-        distance   = TimeSeriesData(name="distance"  ,labels=[],data=[],unit='m')
-        heart_rate = TimeSeriesData(name="heart_rate",labels=[],data=[],unit="bpm")
-        speed      = TimeSeriesData(name="speed"     ,labels=[],data=[],unit="m/s")
+        distance          = TimeSeriesData(name="distance"         ,labels=[],data=[],unit='m')
+        enhanced_altitude = TimeSeriesData(name="enhanced_altitude",labels=[],data=[],unit='m')
+        heart_rate        = TimeSeriesData(name="heart_rate"       ,labels=[],data=[],unit="bpm")
+#        speed             = TimeSeriesData(name="speed"            ,labels=[],data=[],unit="m/s")
         
         rows = 0
         abs_len = 0
@@ -101,7 +98,7 @@ class Running(IPlugin,Plugin):
         row = None
                
         for row in self._alchemy_logbook.execute(s):
-            if row.cadence and row.distance and row.enhanced_speed and row.heart_rate:
+            if row.enhanced_altitude and row.distance and row.distance and row.heart_rate:
                 rows = rows + 1
                 
                 if last_ts == 0:
@@ -110,8 +107,8 @@ class Running(IPlugin,Plugin):
                 ts =  ((row.timestamp-last_ts).seconds/60)
 
                 
-                cadence.data.append(row.cadence)
-                cadence.labels.append(ts)
+                enhanced_altitude.data.append(row.enhanced_altitude)
+                enhanced_altitude.labels.append(ts)
                 
                 distance.data.append(row.distance-abs_len)
                 abs_len = row.distance
@@ -120,11 +117,11 @@ class Running(IPlugin,Plugin):
                 heart_rate.data.append(row.heart_rate)
                 heart_rate.labels.append(ts)
                 
-                speed.data.append(row.enhanced_speed)
-                speed.labels.append(ts)
+#                speed.data.append(row.enhanced_speed)
+#                speed.labels.append(ts)
             
         if row:
-            self._data = [cadence,distance,heart_rate,speed]
+            self._data = [enhanced_altitude,distance,heart_rate]
     
             self._formdata = []
     
@@ -153,4 +150,4 @@ class Running(IPlugin,Plugin):
         return self._data
     
     def connect(self,event=None):
-        return Running(log_name=self._filename,metadata=event)
+        return Cycling(log_name=self._filename,metadata=event)
