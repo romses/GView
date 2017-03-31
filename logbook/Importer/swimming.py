@@ -5,7 +5,6 @@ from sqlalchemy import *
 import logging
 from misc.profiling import timing
 from PyQt5.QtWidgets import QLabel, QFormLayout, QLineEdit
-import misc.profiling
 #from PyQt5 import QtCore, QtGui, QtWidgets
 
 
@@ -30,7 +29,7 @@ class Swimming(IPlugin,Plugin):
                                  subtype=metadata.event_subtype
                                  )
             self.open_logbook(self._filename)
-            self.get_data()
+#            self.get_data()
 
     def open_logbook(self,logbook):
         self._filename = logbook
@@ -198,13 +197,9 @@ class Swimming(IPlugin,Plugin):
                 layout.addRow(QLabel(self._formdata[i].name+" ("+self._formdata[i].unit+")"), QLineEdit(str(self._formdata[i].value)))
         return layout
 
-    @property
-    def metadata(self):
-        return self._metadata
-    
-    @property
-    def data(self):
-        return self._data
+#    @property
+#    def metadata(self):
+#        return self._metadata
     
     def connect(self,event=None):
         return Swimming(log_name=self._filename,metadata=event)

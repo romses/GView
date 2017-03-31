@@ -4,6 +4,7 @@ from fitparse import FitFile
 import os.path
 from yapsy.PluginManager import PluginManager 
 from messages import EventTableEntry,LogRow
+from misc.profiling import timing
 
 
 '''
@@ -61,7 +62,8 @@ class Logbook(object):
 
         self.logging.info("%s plugins loaded"%len(manager.getAllPlugins()))
         self.read_events()
-        
+     
+    @timing   
     def read_events(self):
         stmt = self._file_table.select().order_by(desc(self._file_table.c.creation_date))
         rows = stmt.execute()

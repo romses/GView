@@ -29,7 +29,6 @@ class Cycling(IPlugin,Plugin):
                                  subtype=metadata.event_subtype
                                  )
             self.open_logbook(self._filename)
-            self.get_data()
 
     def open_logbook(self,logbook):
         self._filename = logbook
@@ -141,13 +140,9 @@ class Cycling(IPlugin,Plugin):
                 layout.addRow(QLabel(self._formdata[i].name+" ("+self._formdata[i].unit+")"), QLineEdit(str(self._formdata[i].value)))
         return layout
 
-    @property
-    def metadata(self):
-        return self._metadata
-    
-    @property
-    def data(self):
-        return self._data
+#    @property
+#    def metadata(self):
+#        return self._metadata
     
     def connect(self,event=None):
         return Cycling(log_name=self._filename,metadata=event)

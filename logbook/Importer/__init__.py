@@ -25,11 +25,13 @@ class Plugin:
 
     @property
     def metadata(self):
-        return []
+        return self._metadata
     
     @property
     def data(self):
-        return []
+        if not self._data:
+            self.get_data()
+        return self._data
 
     @property
     def formdata(self):

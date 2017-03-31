@@ -29,8 +29,9 @@ class Running(IPlugin,Plugin):
                                  subtype=metadata.event_subtype
                                  )
             self.open_logbook(self._filename)
-            self.get_data()
 
+
+    @timing
     def open_logbook(self,logbook):
         self._filename = logbook
         self._alchemy_logbook = create_engine('sqlite:///'+logbook)   
@@ -144,13 +145,5 @@ class Running(IPlugin,Plugin):
                 layout.addRow(QLabel(self._formdata[i].name+" ("+self._formdata[i].unit+")"), QLineEdit(str(self._formdata[i].value)))
         return layout
 
-    @property
-    def metadata(self):
-        return self._metadata
-    
-    @property
-    def data(self):
-        return self._data
-    
     def connect(self,event=None):
         return Running(log_name=self._filename,metadata=event)
