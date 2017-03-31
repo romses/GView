@@ -8,12 +8,8 @@ Created on 9 Mar 2017
 from PyQt5.QtWidgets import QApplication, QMainWindow 
 from PyQt5.QtWidgets import qApp, QFileDialog,QWidget
 from PyQt5.QtWidgets import QAbstractItemView, QTableWidgetItem
-#from PyQt5.QtWidgets import QSizePolicy,QPushButton
-#from PyQt5 import QtWidgets
-#from PyQt5.QtCore import QObject
 from PyQt5.QtCore import QSettings
 from gui.GraphWidget import GraphWidget
-#import random
 #import seaborn as sns
 import logging
 
@@ -112,8 +108,6 @@ class Application(QMainWindow, Ui_FitView):
         
                 i=0
                 
-                print("EV Table len:",len(self._event_table))
-                
                 for ev in self._event_table:
                     self.all_events_table.setItem(i,0, QTableWidgetItem(str(ev.metadata.date)))
                     self.all_events_table.setItem(i,1, QTableWidgetItem(ev.metadata.name))
@@ -123,7 +117,6 @@ class Application(QMainWindow, Ui_FitView):
                     tmp = QWidget()
                     tmp.setLayout(ev.ui)
                     self.metadataStackedWidget.insertWidget(i,tmp)
-    #                self.metadataStackedWidget.addWidget(tmp)
                     i+=1
             
             self.graphwidget.update_figure()

@@ -9,7 +9,7 @@ class MatPlotLibCanvas(FigureCanvas):
     
     def __init__(self, parent=None, dpi=100):
         
-        self.fig = Figure(dpi=dpi,frameon=True)#,tight_layout=True)
+        self.fig = Figure(dpi=dpi,frameon=True)
         
         self.axes = self.fig.add_subplot(111)
         

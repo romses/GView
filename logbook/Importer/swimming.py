@@ -95,13 +95,14 @@ class Swimming(IPlugin,Plugin):
                     event_timestamp = record_data.value
                 if record_data.name == "distance":
                     distance = record_data.value
+                    
+            if event_timestamp and distance:
+                data.append({'timestamp':event_timestamp,'distance':distance})
 
-            data.append({'timestamp':event_timestamp,'distance':distance})
-
-            stmt = self.swim_table.update().\
-            where(self.swim_table.c.event_timestamp==bindparam('timestamp')).\
-            values(distance=bindparam('distance'))
-            self._alchemy_logbook.execute(stmt,data)
+                stmt = self.swim_table.update().\
+                where(self.swim_table.c.event_timestamp==bindparam('timestamp')).\
+                values(distance=bindparam('distance'))
+                self._alchemy_logbook.execute(stmt,data)
 
     def get_data(self):
         
