@@ -1,5 +1,7 @@
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
+import matplotlib
+import datetime
 import numpy
 
 from PyQt5.QtWidgets import QSizePolicy
@@ -30,9 +32,16 @@ class MatPlotLibCanvas(FigureCanvas):
         if data:
             for event in data:
                 unit = "("+event.unit+")" if event.unit else ""
-                g, = self.axes.plot( event.labels,event.data,label=event.name+unit)
+                if isinstance(event.labels[-1], datetime.datetime):
+                    dates = matplotlib.dates.date2num(event.labels)
+                    g, = self.axes.plot_date(dates,event.data,label=event.name+unit)
+                else:
+                    g, = self.axes.plot( event.labels,event.data,label=event.name+unit)
+
                 g.set_drawstyle('steps-mid')
-                
+                g.set_marker(' ')
+                g.set_linestyle('-')
+          
 
             self.axes.set_xlabel("XLabel")
             self.axes.set_ylabel("YLabel")
