@@ -29,6 +29,7 @@ class Cycling(IPlugin,Plugin):
                                  subtype=metadata.event_subtype
                                  )
             self.open_logbook(self._filename)
+            self.get_data()
 
     def open_logbook(self,logbook):
         self._filename = logbook
@@ -132,6 +133,7 @@ class Cycling(IPlugin,Plugin):
 
     @property
     def ui(self):
+#        logging.debug("Building cycling UI")
         layout = QFormLayout()
         self.labels=[]
         self.lineedits=[]

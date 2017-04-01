@@ -29,7 +29,7 @@ class Swimming(IPlugin,Plugin):
                                  subtype=metadata.event_subtype
                                  )
             self.open_logbook(self._filename)
-#            self.get_data()
+            self.get_data()
 
     def open_logbook(self,logbook):
         self._filename = logbook
@@ -189,12 +189,14 @@ class Swimming(IPlugin,Plugin):
 
     @property
     def ui(self):
+#        logging.debug("Building swimming UI")
         layout = QFormLayout()
         self.labels=[]
         self.lineedits=[]
-        if self._formdata:
+        if self._formdata or True:
             for i in range(len(self._formdata)):
                 layout.addRow(QLabel(self._formdata[i].name+" ("+self._formdata[i].unit+")"), QLineEdit(str(self._formdata[i].value)))
+                
         return layout
 
 #    @property

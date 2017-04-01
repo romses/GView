@@ -29,6 +29,7 @@ class Running(IPlugin,Plugin):
                                  subtype=metadata.event_subtype
                                  )
             self.open_logbook(self._filename)
+            self.get_data()
 
 
     @timing
@@ -137,6 +138,7 @@ class Running(IPlugin,Plugin):
 
     @property
     def ui(self):
+#        logging.debug("Building running UI")
         layout = QFormLayout()
         self.labels=[]
         self.lineedits=[]

@@ -36,7 +36,6 @@ class Application(QMainWindow, Ui_FitView):
         self.action_Open_Logbook.triggered.connect(self.open_logbook)
         self.action_New_Logbook.triggered.connect(self.new_logbook)
         self.action_Close_Logbook.triggered.connect(self.close_logbook)
-#        self.all_events_table.itemClicked.connect(self._row_clicked)
         self.all_events_table.itemSelectionChanged.connect(self._selection_changed)
         self.all_events_table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.all_events_table.hideColumn(4)
@@ -51,16 +50,6 @@ class Application(QMainWindow, Ui_FitView):
             self.restoreState(self.settings.value("windowState"))
             
         self.graphwidget.update_figure(data=None)
-            
-    def _row_clicked(self,item):
-        
-        indexes = []
-        for selectionRange in self.all_events_table.selectedRanges():
-            row = int(self.all_events_table.item(item.row(),4).text())
-            indexes.append(row)
-        
-        self.metadataStackedWidget.setCurrentIndex(indexes[0])
-        self.graphwidget.update_figure(data=self._event_table[indexes[0]].data,title="Bar")
         
     def _selection_changed(self):
         indexes = []
@@ -77,8 +66,9 @@ class Application(QMainWindow, Ui_FitView):
         
         if file_names:
             if self._logbook.import_file(file_names):
-                pass
+                logging.info("Import successful")
             else:
+                logging.info("Import unsuccessful")
                 self.logging.info("Invalid File")
         self.load_tablewidget_data()
                       
